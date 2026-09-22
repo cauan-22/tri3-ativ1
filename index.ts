@@ -1,10 +1,9 @@
-//           Banco de Dados   HTTP
-// [C]reate  insert           post
-// [R]ead    select           get
-// [U]pdate  update           put
-// [U]pdate  update           patch
-// [D]elete  delete           delete
-// 
+//            BANCO DE DADOS     HTTP
+// [C]reat    insert             post
+// [R]read    select             get
+// [U]pdate   update             put
+// [U]pdate   update             patch
+// [D]elete   delete             delete
 
 import { db } from "./db"
 
@@ -12,63 +11,113 @@ const srv = Bun.serve({
     port: 3000,
     routes: {
         "/user": {
-            GET: () => Response.json("", { status: 501 }),
-            
+            GET: () => {
+                const query = db.query(`SELECT * FROM users`)
+                const data = query.all()
+                return Response.json(data)
+            },
+
             POST: async (req) => {
-                const body = await req.body.json();
+                const body = await req.body.json()
                 const query = db.query(`
                     INSERT INTO users(username, email, password_hash)
-                    VALUES(:username, :email, :password_hash)    
+                    VALUES(:username, :email, :password_hash)
                 `)
                 const dbResp = query.run({
                     ':username': body.username,
-                    ':email' : body.email,
-                    ':password_hash':  body.password
+                    ':email': body.email,
+                    ':password_hash': body.password
                 })
                 return Response.json({
-                    "message": "deu bom",
+                    "message": "deu boa garote!",
                     dbResp
                 })
             },
-
         },
 
         "/user/:id": {
-            GET: (req) => {
-                const query = db.query(`
-                    SELECT * FROM users
-                    WHERE id=:_id_
-                `)
-                const deResp = query.get({ ":_id_": req.params.id })
-                return Response.json(deResp)
+           GET: (req) => {
+                const id = req.params.id
+                const query = db.query(`SELECT * FROM users WHERE id=:id`)
+                const data = query.get({ ':id': id })
+                return Response.json(data)
             },
 
-            PUT: async (req) => {
-                const body = await req.body.json();
-                const query = db.query(`
-                    UPDATE users 
-                    SET username=:username, email=:email, :password_hash
-                    WHERE id=:_id_;
-                `)
-                const deResp = query.run({
+            PUT: async(req) => {
+                const body = await req.body.json()
+                const query = db.query(`UPDATE users SET username = :username, email = :email, password_hash = :password WHERE id = :id`)
+                const dbResp = query.run({
                     ':username': body.username,
-                    ':email' : body.email,
-                    ':password_hash':  body.password
+                    ':email': body.email,
+                    ':password': body.password,
+                    ':id': req.params.id
                 })
-                return Response.json(deResp)
+                return Response.json(dbResp)
             },
 
             DELETE: (req) => {
-                const body = await req.body.json();
-                const query = db.query(`
-                   DELETE FROM users 
-                   WHERE id=:_id_;
-                `)
-                const deResp = query.get({ ":_id_": req.params.id })
-                return Response.json(deResp)
+                const query = db.query(`DELETE FROM users WHERE id=:id`)
+                const data = query.run({ ':id': req.params.id })
+                return Response.json(data)
             },
-        }
+        },
+
+        "/music": {
+           GET: () => {
+                const query = db.query(`SELECT * FROM music`)
+                const data = query.all()
+                return Response.json(data)
+            },
+
+            POST: async (req) => {
+                const body = await req.body.json()
+                const query = db.query(`
+                    INSERT INTO music(nome, artista, tempo, acordes, afinacao)
+                    VALUES(:nome, :artista, :tempo, :acordes, :afinacao)
+                `)
+                const dbResp = query.run({
+                    ':nome': body.nome,
+                    ':artista': body.artista,
+                    ':tempo': body.tempo,
+                    ':acordes': body.acordes,
+                    ':afinacao': body.afinacao
+                })
+                return Response.json({
+                    "message": "deu boa garoto!",
+                    dbResp
+                })
+            },
+        },
+
+        "/music/:id": {
+            GET: (req) => {
+                const id = req.params.id
+                const query = db.query(`SELECT * FROM music WHERE id=:id`)
+                const data = query.get({ ':id': id })
+                return Response.json(data)
+            },
+
+            PUT: async(req) => {
+                const body = await req.body.json()
+                const query = db.query(`UPDATE music SET nome = :nome, artista = :artista, tempo = :tempo, acordes = :acordes, afinacao = :afinacao WHERE id = :id`)
+                const dbResp = query.run({
+                    ':nome': body.nome,
+                    ':artista': body.artista,
+                    ':tempo': body.tempo,
+                    ':acordes': body.acordes,
+                    ':afinacao': body.afinacao,
+                    ':id': req.params.id
+                })
+                return Response.json(dbResp)
+            },
+
+            DELETE: (req) => {
+                const query = db.query(`DELETE FROM music WHERE id=:id`)
+                const data = query.run({ ':id': req.params.id })
+                return Response.json(data)
+            },
+        },
     }
 })
 
-console.log(`Server running: ${srv.url}`)
+console.log(`Servidor em ${srv.url}`)
