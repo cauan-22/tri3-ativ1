@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang='pt-BR'>
+<head>
+    <meta charset='utf-8'>
+    <title>App</title>
+</head>
+<body>
+    <ul class="display"></ul>
+    
+    <input type="number" class="id">
+    <button class="mostrar">mostrar</button>
+    <div class="nome">o nome vai aparecer aqui</div>
+    
+    <script>
+        async function init() {
+            const display = document.querySelector(".display")
+            const response = await fetch("/user")
+            const data = await response.json()
+            data.forEach(user => {
+                display.innerHTML += `<li>${user.username}</li>`
+            });
+        }
+         init()
+
+         async function usuario() {
+            const id = document.querySelector(".id").value
+            const nome = document.querySelector(".nome")
+
+            const response = await fetch(`/user/${id}`)
+            const data = await response.json()
+
+            nome.textContent = data.username
+
+            if(id = null){
+               return console.log("tem essa cara aqui nao pae")
+            }
+         }
+
+         document.querySelector(".mostrar").addEventListener("click", usuario)
+    </script>
+</body>
+</html>

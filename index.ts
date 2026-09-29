@@ -5,11 +5,14 @@
 // [U]pdate   update             patch
 // [D]elete   delete             delete
 
+import frontend from "./index.html"
 import { db } from "./db"
 
 const srv = Bun.serve({
     port: 3000,
     routes: {
+        "/" : frontend,
+
         "/user": {
             GET: () => {
                 const query = db.query(`SELECT * FROM users`)
@@ -20,7 +23,7 @@ const srv = Bun.serve({
             POST: async (req) => {
                 let body
                 try {
-                    body = await req.body.json()
+                    body = await req.body?.json()
                 } catch (error: any) {
                     return Response.json({
                         message: "JSON mal formado",
@@ -71,8 +74,9 @@ const srv = Bun.serve({
             },
 
             PUT: async (req) => {
+                let body
                 try {
-                    body = await req.body.json()
+                    body = await req.body?.json()
                 } catch (error: any) {
                     return Response.json({
                         message: "JSON mal formado",
@@ -104,7 +108,7 @@ const srv = Bun.serve({
             },
 
             POST: async (req) => {
-                const body = await req.body.json()
+                const body = await req.body?.json()
                 const query = db.query(`
                     INSERT INTO music(nome, artista, tempo, acordes, afinacao)
                     VALUES(:nome, :artista, :tempo, :acordes, :afinacao)
@@ -132,7 +136,7 @@ const srv = Bun.serve({
             },
 
             PUT: async(req) => {
-                const body = await req.body.json()
+                const body = await req.body?.json()
                 const query = db.query(`UPDATE music SET nome = :nome, artista = :artista, tempo = :tempo, acordes = :acordes, afinacao = :afinacao WHERE id = :id`)
                 const dbResp = query.run({
                     ':nome': body.nome,
