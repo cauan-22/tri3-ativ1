@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<body>    
+    <form>
+        <input type="text" name="username" placeholder="email de login">
+        <input type="password" name="password" placeholder="senha">
+        <button>entrar</button>
+    </form>
+    <script>
+        const frmLogin = document.querySelector('form')
+        frmLogin.addEventListener('submit', async (ev) => {
+            ev.preventDefault()
+            const response = await fetch("/login", {
+                method: "POST",
+                headers: { "Content-type": "application/json" },
+                body: JSON.stringify({
+                    "username": frmLogin.username.value,
+                    "password": frmLogin.password.value
+                })
+            })
+
+            if (response.status == 404) 
+                return alert("Usuário não encontrado")
+                
+            if (response.status == 401) 
+                return alert("Senha incorreta")
+
+            if (response.ok)
+                return alert("Usuário logado com sucesso")
+
+            alert("Não deveria chegar aqui")
+        }) 
+    </script>
+</body>
+</html>
