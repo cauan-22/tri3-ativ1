@@ -1,17 +1,31 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
 </head>
-<body>    
-    <form>
+
+<body>
+    <h1>Login</h1>
+    <form id="frmLogin">
         <input type="text" name="username" placeholder="email de login">
         <input type="password" name="password" placeholder="senha">
-        <button>entrar</button>
+        <button type="submit">entrar</button>
     </form>
+
+    <h1>Cadastrar</h1>
+
+    <form id="frmCadastro">
+        <input type="text" name="username" placeholder="email de login">
+        <input type="password" name="password" placeholder="crie a senha">
+        <button type="submit">cadastrar</button>
+    </form>
+
     <script>
-        const frmLogin = document.querySelector('form')
+        const frmLogin = document.querySelector('#frmLogin')
+        const frmCadastro = document.querySelector('#frmCadastro')
+
         frmLogin.addEventListener('submit', async (ev) => {
             ev.preventDefault()
             const response = await fetch("/login", {
@@ -23,17 +37,40 @@
                 })
             })
 
-            if (response.status == 404) 
+            if (response.status == 404)
                 return alert("Usuário não encontrado")
-                
-            if (response.status == 401) 
+
+            if (response.status == 401)
                 return alert("Senha incorreta")
 
-            if (response.ok)
-                return alert("Usuário logado com sucesso")
+            if (response.ok) {
+                window.location.href = "/home"
+                return
+            }
 
             alert("Não deveria chegar aqui")
-        }) 
+        })
+
+        frmCadastro.addEventListener('submit', async (ev) => {
+            ev.preventDefault()
+            const response = await fetch("/user", {
+                method: "POST",
+                headers: { "Content-type": "application/json" },
+                body: JSON.stringify({
+                    "username": frmCadastro.username.value,
+                    "password": frmCadastro.password.value
+                })
+            })
+            if (response.ok) {
+                alert("Usuário cadastrado com sucesso!")
+                frmCadastro.reset()
+                return
+            }
+
+            const data = await response.json()
+            alert(data.msg || "Erro ao cadastrar usuário")
+        })
     </script>
 </body>
+
 </html>

@@ -6,5 +6,29 @@
 </head>
 <body>
     <h1>HOME</h1>
+
+    <div class="profile">
+        <img class="thumb">
+        <div class="username">
+
+        </div>
+    </div>
+
+    <script>
+
+        async function init() {
+            const response = await fetch("/login/user")
+            
+            if(!response.ok){
+                alert("usuario nao esta logado")
+                window.location.href = "/"
+                return
+            }
+
+            const data = await response.json()
+            document.querySelector(".profile .username").textContent = data.username
+        }
+        init()
+    </script>
 </body>
 </html>
