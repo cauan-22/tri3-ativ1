@@ -2,17 +2,45 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CifraBox - Início</title>
+    <link rel="stylesheet" href="./home.css">
 </head>
 <body>
-    <h1>HOME</h1>
+    <header>
+        <a class="logo" href="/home">Cifra<span>Box</span></a>
 
-    <div class="profile">
-        <img class="thumb">
-        <div class="username">
+        <div class="profile">
+            <div class="username">
 
+            </div>
         </div>
-    </div>
+    </header>
+
+    <nav>
+        <a href="/home" class="ativo">Início</a>
+        <a href="#musicas">Minhas músicas</a>
+        <a href="#pastas">Pastas</a>
+    </nav>
+
+    <main>
+        <section>
+            <h1>Bem-vindo de volta</h1>
+            <p>Sua biblioteca de músicas, letras e cifras.</p>
+            <a class="botao" href="/nova-musica">Adicionar música</a>
+        </section>
+
+        <section id="musicas">
+            <h2>Adicionadas recentemente</h2>
+            <div id="listaMusicas"></div>
+            <p class="vazio" id="semMusicas">Você ainda não tem músicas. Comece adicionando a sua primeira!</p>
+        </section>
+
+        <section id="pastas">
+            <h2>Pastas</h2>
+            <p class="vazio">Você ainda não criou nenhuma pasta.</p>
+        </section>
+    </main>
 
     <script>
 
@@ -29,6 +57,38 @@
             document.querySelector(".profile .username").textContent = data.username
         }
         init()
+    </script>
+
+    <script>
+        const listaMusicas = document.querySelector('#listaMusicas')
+        const semMusicas = document.querySelector('#semMusicas')
+
+        // ainda não existe rota de músicas, então a lista fica vazia por enquanto
+        const musicas = []
+
+        semMusicas.hidden = musicas.length > 0
+
+        musicas.forEach((musica) => {
+            const item = document.createElement('a')
+            item.className = 'musica'
+            item.href = '/musica/' + musica.id
+
+            const nome = document.createElement('strong')
+            nome.textContent = musica.nome
+
+            const artista = document.createElement('span')
+            artista.textContent = musica.artista
+
+            item.append(nome, artista)
+
+            if (musica.tom) {
+                const tom = document.createElement('small')
+                tom.textContent = 'Tom: ' + musica.tom
+                item.append(tom)
+            }
+
+            listaMusicas.append(item)
+        })
     </script>
 </body>
 </html>

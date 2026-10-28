@@ -3,24 +3,29 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CifraBox - Login</title>
+    <link rel="stylesheet" href="./login.css">
 </head>
 
 <body>
-    <h1>Login</h1>
-    <form id="frmLogin">
-        <input type="text" name="username" placeholder="email de login">
-        <input type="password" name="password" placeholder="senha">
-        <button type="submit">entrar</button>
-    </form>
+    <main>
+        <h1>Cifra<span>Box</span></h1>
 
-    <h1>Cadastrar</h1>
+        <form id="frmLogin">
+            <input type="email" name="username" placeholder="email de login" required>
+            <input type="password" name="password" placeholder="senha" required>
+            <button type="submit">entrar</button>
+            <p>Não tem conta? <a href="#" id="linkCadastro">Criar conta</a></p>
+        </form>
 
-    <form id="frmCadastro">
-        <input type="text" name="username" placeholder="email de login">
-        <input type="password" name="password" placeholder="crie a senha">
-        <button type="submit">cadastrar</button>
-    </form>
+        <form id="frmCadastro" hidden>
+            <input type="email" name="username" placeholder="email de login" required>
+            <input type="password" name="password" placeholder="crie a senha" required>
+            <button type="submit">cadastrar</button>
+            <p>Já tem conta? <a href="#" id="linkLogin">Entrar</a></p>
+        </form>
+    </main>
 
     <script>
         const frmLogin = document.querySelector('#frmLogin')
@@ -69,6 +74,21 @@
 
             const data = await response.json()
             alert(data.msg || "Erro ao cadastrar usuário")
+        })
+   
+        const linkCadastro = document.querySelector('#linkCadastro')
+        const linkLogin = document.querySelector('#linkLogin')
+
+        linkCadastro.addEventListener('click', (ev) => {
+            ev.preventDefault()
+            frmLogin.hidden = true
+            frmCadastro.hidden = false
+        })
+
+        linkLogin.addEventListener('click', (ev) => {
+            ev.preventDefault()
+            frmLogin.hidden = false
+            frmCadastro.hidden = true
         })
     </script>
 </body>
