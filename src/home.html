@@ -19,16 +19,15 @@
 
     <nav>
         <a href="/home" class="ativo">Início</a>
-        <a href="#musicas">Minhas músicas</a>
+        <a href="#musicas">Músicas</a>
         <a href="#pastas">Pastas</a>
     </nav>
 
     <main>
-        <section>
-            <h1>Bem-vindo de volta</h1>
-            <p>Sua biblioteca de músicas, letras e cifras.</p>
+        <div class="acoes">
+            <input type="search" id="busca" placeholder="Buscar música ou artista">
             <a class="botao" href="/nova-musica">Adicionar música</a>
-        </section>
+        </div>
 
         <section id="musicas">
             <h2>Adicionadas recentemente</h2>
@@ -46,7 +45,7 @@
 
         async function init() {
             const response = await fetch("/login/user")
-            
+
             if(!response.ok){
                 alert("usuario nao esta logado")
                 window.location.href = "/"
@@ -62,33 +61,60 @@
     <script>
         const listaMusicas = document.querySelector('#listaMusicas')
         const semMusicas = document.querySelector('#semMusicas')
+        const busca = document.querySelector('#busca')
 
-        // ainda não existe rota de músicas, então a lista fica vazia por enquanto
-        const musicas = []
+        let musicas = []
 
-        semMusicas.hidden = musicas.length > 0
+        function mostrar() {
+            const texto = busca.value.toLowerCase()
 
-        musicas.forEach((musica) => {
-            const item = document.createElement('a')
-            item.className = 'musica'
-            item.href = '/musica/' + musica.id
+            const lista = texto
+                ? musicas.filter((m) => m.nome.toLowerCase().includes(texto) || (m.artista || '').toLowerCase().includes(texto))
+                : musicas.slice(0, 5)
 
-            const nome = document.createElement('strong')
-            nome.textContent = musica.nome
+            semMusicas.hidden = musicas.length > 0
+            listaMusicas.replaceChildren()
 
-            const artista = document.createElement('span')
-            artista.textContent = musica.artista
+            lista.forEach((musica) => {
+                const item = document.createElement('a')
+                item.className = 'musica'
+                item.href = '/musica/' + musica.id
 
-            item.append(nome, artista)
+                const info = document.createElement('div')
+                info.className = 'info'
 
-            if (musica.tom) {
-                const tom = document.createElement('small')
-                tom.textContent = 'Tom: ' + musica.tom
-                item.append(tom)
-            }
+                const nome = document.createElement('strong')
+                nome.textContent = musica.nome
 
-            listaMusicas.append(item)
-        })
+                const artista = document.createElement('span')
+                artista.textContent = musica.artista
+
+                info.append(nome, artista)
+                item.append(info)
+
+                if (musica.tom) {
+                    const tom = document.createElement('small')
+                    tom.className = 'tom'
+                    tom.textContent = musica.tom
+                    item.append(tom)
+                }
+
+                listaMusicas.append(item)
+            })
+        }
+
+        async function carregarMusicas() {
+            const response = await fetch('/music')
+            if (!response.ok)
+                return
+
+            const data = await response.json()
+            musicas = data.sort((a, b) => b.id - a.id)
+            mostrar()
+        }
+
+        busca.addEventListener('input', mostrar)
+        carregarMusicas()
     </script>
 </body>
 </html>
