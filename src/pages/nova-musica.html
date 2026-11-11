@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CifraBox - Nova música</title>
+    <link rel="stylesheet" href="../css/home.css">
+</head>
+<body>
+    <header>
+        <a class="logo" href="/home">Cifra<span>Box</span></a>
+
+        <div class="profile">
+            <div class="username">
+
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <h2>Adicionar música</h2>
+
+        <form id="frmMusica">
+            <input type="text" name="nome" placeholder="nome da música" required>
+            <input type="text" name="artista" placeholder="artista">
+            <input type="text" name="tom" placeholder="tom (ex: G, Am)">
+            <textarea name="letra" placeholder="letra"></textarea>
+            <textarea name="acordes" id="cifra" placeholder="cifra"></textarea>
+
+            <div class="botoes">
+                <button type="submit">salvar</button>
+                <a href="/home">cancelar</a>
+            </div>
+        </form>
+    </main>
+
+    <script>
+
+        async function init() {
+            const response = await fetch("/login/user")
+
+            if(!response.ok){
+                alert("usuario nao esta logado")
+                window.location.href = "/"
+                return
+            }
+
+            const data = await response.json()
+            document.querySelector(".profile .username").textContent = data.username
+        }
+        init()
+    </script>
+
+    <script>
+        const frmMusica = document.querySelector('#frmMusica')
+
+        frmMusica.addEventListener('submit', async (ev) => {
+            ev.preventDefault()
+            const response = await fetch("/music", {
+                method: "POST",
+                headers: { "Content-type": "application/json" },
+                body: JSON.stringify({
+                    "nome": frmMusica.nome.value,
+                    "artista": frmMusica.artista.value,
+                    "tom": frmMusica.tom.value,
+                    "letra": frmMusica.letra.value,
+                    "acordes": frmMusica.acordes.value
+                })
+            })
+
+            if (response.ok) {
+                window.location.href = "/home"
+                return
+            }
+
+            const data = await response.json()
+            alert(data.message || "Erro ao cadastrar música")
+        })
+    </script>
+</body>
+</html>

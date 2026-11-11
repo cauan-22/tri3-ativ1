@@ -156,3 +156,61 @@ h2 {
     font-size: 15px;
     color: #bbb;
 }
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 600px;
+}
+
+form input,
+form textarea {
+    padding: 12px;
+    font-family: inherit;
+    font-size: 16px;
+    color: #fff;
+    background: #1f1f1f;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+}
+
+form input:focus,
+form textarea:focus {
+    outline: none;
+    border-color: #f5c518;
+}
+
+textarea {
+    min-height: 140px;
+    resize: vertical;
+}
+
+#cifra {
+    font-family: monospace;
+}
+
+form button {
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #141414;
+    background: #f5c518;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+form button:hover {
+    background: #ffd633;
+}
+
+.botoes {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.botoes a {
+    color: #bbb;
+}

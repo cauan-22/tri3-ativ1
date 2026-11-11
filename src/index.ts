@@ -5,11 +5,18 @@
 // [U]pdate   update             patch
 // [D]elete   delete             delete
 
-import frontend from "./index.html"
-import home from "./home.html"
+import frontend from "./pages/index.html"
+import home from "./pages/home.html"
+import novaMusica from "./pages/nova-musica.html"
 import { db } from "./db"
 
 const loggedUsers: any = {}
+
+// devolve o usuário logado (ou null se não tiver sessão)
+function usuarioLogado(req: any) {
+    const ses = req.cookies.get("ses")
+    return ses ? loggedUsers[ses] : null
+}
 
 const srv = Bun.serve({
     port: 3000,
@@ -17,6 +24,8 @@ const srv = Bun.serve({
         "/" : frontend,
 
         "/home": home,
+
+        "/nova-musica": novaMusica,
 
         "/login": {
             POST: async (req) => {
@@ -133,24 +142,35 @@ const srv = Bun.serve({
         },
 
         "/music": {
-           GET: () => {
-                const query = db.query(`SELECT * FROM music`)
-                const data = query.all()
+            GET: (req) => {
+                const user = usuarioLogado(req)
+                if (!user)
+                    return Response.json({ message: "não permitido" }, { status: 401 })
+                const query = db.query(`SELECT * FROM music WHERE user_id=:user_id`)
+                const data = query.all({ ':user_id': user.id })
                 return Response.json(data)
             },
 
             POST: async (req) => {
+                const user = usuarioLogado(req)
+                if (!user)
+                    return Response.json({ message: "não permitido" }, { status: 401 })
                 const body = await req.body?.json()
+                if (!body.nome)
+                    return Response.json({ message: "Falta da informação: nome" }, { status: 400 })
                 const query = db.query(`
-                    INSERT INTO music(nome, artista, tempo, acordes, afinacao)
-                    VALUES(:nome, :artista, :tempo, :acordes, :afinacao)
+                    INSERT INTO music(user_id, nome, artista, tom, tempo, letra, acordes, afinacao)
+                    VALUES(:user_id, :nome, :artista, :tom, :tempo, :letra, :acordes, :afinacao)
                 `)
                 const dbResp = query.run({
+                    ':user_id': user.id,
                     ':nome': body.nome,
-                    ':artista': body.artista,
-                    ':tempo': body.tempo,
-                    ':acordes': body.acordes,
-                    ':afinacao': body.afinacao
+                    ':artista': body.artista ?? null,
+                    ':tom': body.tom ?? null,
+                    ':tempo': body.tempo ?? null,
+                    ':letra': body.letra ?? null,
+                    ':acordes': body.acordes ?? null,
+                    ':afinacao': body.afinacao ?? null
                 })
                 return Response.json({
                     "message": "deu boa garoto!",
@@ -161,29 +181,44 @@ const srv = Bun.serve({
 
         "/music/:id": {
             GET: (req) => {
-                const id = req.params.id
-                const query = db.query(`SELECT * FROM music WHERE id=:id`)
-                const data = query.get({ ':id': id })
+                const user = usuarioLogado(req)
+                if (!user)
+                    return Response.json({ message: "não permitido" }, { status: 401 })
+                const query = db.query(`SELECT * FROM music WHERE id=:id AND user_id=:user_id`)
+                const data = query.get({ ':id': req.params.id, ':user_id': user.id })
                 return Response.json(data)
             },
 
             PUT: async(req) => {
+                const user = usuarioLogado(req)
+                if (!user)
+                    return Response.json({ message: "não permitido" }, { status: 401 })
                 const body = await req.body?.json()
-                const query = db.query(`UPDATE music SET nome = :nome, artista = :artista, tempo = :tempo, acordes = :acordes, afinacao = :afinacao WHERE id = :id`)
+                const query = db.query(`
+                    UPDATE music
+                    SET nome = :nome, artista = :artista, tom = :tom, tempo = :tempo, letra = :letra, acordes = :acordes, afinacao = :afinacao
+                    WHERE id = :id AND user_id = :user_id
+                `)
                 const dbResp = query.run({
                     ':nome': body.nome,
-                    ':artista': body.artista,
-                    ':tempo': body.tempo,
-                    ':acordes': body.acordes,
-                    ':afinacao': body.afinacao,
-                    ':id': req.params.id
+                    ':artista': body.artista ?? null,
+                    ':tom': body.tom ?? null,
+                    ':tempo': body.tempo ?? null,
+                    ':letra': body.letra ?? null,
+                    ':acordes': body.acordes ?? null,
+                    ':afinacao': body.afinacao ?? null,
+                    ':id': req.params.id,
+                    ':user_id': user.id
                 })
                 return Response.json(dbResp)
             },
 
             DELETE: (req) => {
-                const query = db.query(`DELETE FROM music WHERE id=:id`)
-                const data = query.run({ ':id': req.params.id })
+                const user = usuarioLogado(req)
+                if (!user)
+                    return Response.json({ message: "não permitido" }, { status: 401 })
+                const query = db.query(`DELETE FROM music WHERE id=:id AND user_id=:user_id`)
+                const data = query.run({ ':id': req.params.id, ':user_id': user.id })
                 return Response.json(data)
             },
         },
