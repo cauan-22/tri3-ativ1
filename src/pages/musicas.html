@@ -1,0 +1,185 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CifraBox - Músicas</title>
+    <link rel="stylesheet" href="../css/home.css">
+</head>
+<body>
+    <header>
+        <a class="logo" href="/home">Cifra<span>Box</span></a>
+        <div class="profile">
+            <div class="username"></div>
+        </div>
+    </header>
+
+    <nav>
+        <a href="/home">Início</a>
+        <a href="/musicas" class="ativo">Músicas</a>
+        <a href="/pastas">Pastas</a>
+    </nav>
+
+    <main>
+        <div class="acoes">
+            <input type="search" id="busca" placeholder="Buscar música ou artista">
+            <a class="botao" href="/nova-musica">Adicionar música</a>
+        </div>
+
+        <section>
+            <h2>Minhas músicas</h2>
+            <div id="listaMusicas"></div>
+            <p class="vazio" id="semMusicas">
+                Você ainda não cadastrou nenhuma música.
+            </p>
+        </section>
+    </main>
+
+    <script>
+        const listaMusicas = document.querySelector('#listaMusicas')
+        const semMusicas = document.querySelector('#semMusicas')
+        const busca = document.querySelector('#busca')
+
+        let musicas = []
+        let pastas = []
+
+        async function init() {
+            const response = await fetch('/login/user')
+
+            if (!response.ok) {
+                window.location.href = '/'
+                return false
+            }
+
+            const data = await response.json()
+            document.querySelector('.username').textContent = data.username
+
+            return true
+        }
+
+        async function carregarPastas() {
+            const response = await fetch('/folder')
+
+            if (response.ok)
+                pastas = await response.json()
+        }
+
+        async function carregarMusicas() {
+            const response = await fetch('/music')
+
+            if (!response.ok)
+                return
+
+            musicas = await response.json()
+            musicas.sort((a, b) => b.id - a.id)
+            mostrar()
+        }
+
+        function mostrar() {
+            const texto = busca.value.toLowerCase()
+
+            const lista = musicas.filter(m =>
+                m.nome.toLowerCase().includes(texto) ||
+                (m.artista || '').toLowerCase().includes(texto)
+            )
+
+            listaMusicas.replaceChildren()
+
+            semMusicas.hidden = musicas.length > 0
+
+            if (musicas.length === 0)
+                return
+
+            if (lista.length === 0) {
+                semMusicas.hidden = false
+                semMusicas.textContent = 'Nenhuma música encontrada.'
+                return
+            }
+
+            semMusicas.hidden = true
+
+            lista.forEach(musica => {
+                const item = document.createElement('div')
+                item.className = 'musica'
+
+                const info = document.createElement('div')
+                info.className = 'info'
+
+                const nome = document.createElement('a')
+                nome.href = '/musica/' + musica.id
+                nome.textContent = musica.nome
+
+                const artista = document.createElement('span')
+                artista.textContent = musica.artista || 'Artista não informado'
+
+                info.append(nome, artista)
+
+                const controles = document.createElement('div')
+                controles.className = 'controles-musica'
+
+                if (musica.tom) {
+                    const tom = document.createElement('small')
+                    tom.className = 'tom'
+                    tom.textContent = musica.tom
+                    controles.append(tom)
+                }
+
+                const select = document.createElement('select')
+                select.className = 'pasta-select'
+                select.setAttribute('aria-label', 'Pasta da música')
+
+                const opcao = document.createElement('option')
+                opcao.value = ''
+                opcao.textContent = 'Sem pasta'
+                select.append(opcao)
+
+                pastas.forEach(pasta => {
+                    const option = document.createElement('option')
+                    option.value = pasta.id
+                    option.textContent = pasta.nome
+                    select.append(option)
+                })
+
+                select.value = musica.folder_id || ''
+
+                select.addEventListener('change', async () => {
+                    const response = await fetch('/music/' + musica.id + '/folder', {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            folderId: select.value ? Number(select.value) : null
+                        })
+                    })
+
+                    if (!response.ok) {
+                        alert('Erro ao organizar música.')
+                        select.value = musica.folder_id || ''
+                        return
+                    }
+
+                    musica.folder_id = select.value ? Number(select.value) : null
+                })
+
+                controles.append(select)
+                item.append(info, controles)
+                listaMusicas.append(item)
+            })
+        }
+
+        busca.addEventListener('input', mostrar)
+
+        async function iniciar() {
+            if (!await init())
+                return
+
+            await carregarPastas()
+            await carregarMusicas()
+        }
+
+        iniciar()
+    </script>
+</body>
+</html>

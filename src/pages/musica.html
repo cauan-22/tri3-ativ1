@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CifraBox - Música</title>
+    <link rel="stylesheet" href="../css/home.css">
+</head>
+<body>
+    <header>
+        <a class="logo" href="/home">Cifra<span>Box</span></a>
+
+        <div class="profile">
+            <div class="username">
+
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <a class="voltar" href="/home">← voltar</a>
+
+        <h1 id="nome"></h1>
+        <p id="detalhes"></p>
+
+        <div class="acoes" id="acoes">
+            <a class="botao" id="linkEditar" href="/home">editar</a>
+            <button type="button" class="apagar" id="btnApagar">apagar</button>
+        </div>
+
+        <section>
+            <h2>Letra</h2>
+            <pre id="letra"></pre>
+        </section>
+
+        <section>
+            <h2>Cifra</h2>
+            <pre id="cifra"></pre>
+        </section>
+    </main>
+
+    <script>
+
+        async function init() {
+            const response = await fetch("/login/user")
+
+            if(!response.ok){
+                alert("usuario nao esta logado")
+                window.location.href = "/"
+                return
+            }
+
+            const data = await response.json()
+            document.querySelector(".profile .username").textContent = data.username
+        }
+        init()
+    </script>
+
+    <script>
+        const id = window.location.pathname.split('/').pop()
+        const acoes = document.querySelector('#acoes')
+        const linkEditar = document.querySelector('#linkEditar')
+        const btnApagar = document.querySelector('#btnApagar')
+
+        async function carregarMusica() {
+            const response = await fetch('/music/' + id)
+            const musica = response.ok ? await response.json() : null
+
+            if (!musica) {
+                document.querySelector('#nome').textContent = 'Música não encontrada'
+                acoes.remove()
+                return
+            }
+
+            document.querySelector('#nome').textContent = musica.nome
+            document.querySelector('#detalhes').textContent = [musica.artista, musica.tom ? 'Tom: ' + musica.tom : ''].filter(Boolean).join(' · ')
+            document.querySelector('#letra').textContent = musica.letra || 'Sem letra cadastrada.'
+            document.querySelector('#cifra').textContent = musica.acordes || 'Sem cifra cadastrada.'
+            linkEditar.href = '/nova-musica?id=' + id
+        }
+        carregarMusica()
+
+        btnApagar.addEventListener('click', async () => {
+            if (!confirm('Apagar esta música?'))
+                return
+
+            const response = await fetch('/music/' + id, { method: 'DELETE' })
+
+            if (response.ok) {
+                window.location.href = '/home'
+                return
+            }
+
+            alert('Erro ao apagar música')
+        })
+    </script>
+</body>
+</html>

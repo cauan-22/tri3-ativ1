@@ -1,5 +1,10 @@
+
 * {
     box-sizing: border-box;
+}
+
+[hidden] {
+    display: none !important;
 }
 
 body {
@@ -71,7 +76,7 @@ section {
 }
 
 h2 {
-    margin: 0 0 8px;
+    margin: 0 0 20px;
     font-size: 20px;
 }
 
@@ -97,21 +102,30 @@ h2 {
     border-color: #f5c518;
 }
 
-.botao {
+.botao,
+form button,
+.botoes-pasta button,
+#btnRenomear {
     padding: 12px 16px;
     font-weight: bold;
-    white-space: nowrap;
     color: #141414;
     background: #f5c518;
+    border: 0;
     border-radius: 4px;
+    cursor: pointer;
     text-decoration: none;
 }
 
-.botao:hover {
+.botao:hover,
+form button:hover,
+.botoes-pasta button:hover,
+#btnRenomear:hover {
     background: #ffd633;
 }
 
-#listaMusicas {
+#listaMusicas,
+#listaPastas,
+#listaPastaMusicas {
     border-top: 1px solid #3a3a3a;
 }
 
@@ -126,7 +140,8 @@ h2 {
     text-decoration: none;
 }
 
-.musica:hover strong {
+.musica:hover strong,
+.musica:hover .info a {
     color: #f5c518;
 }
 
@@ -135,6 +150,12 @@ h2 {
     flex-direction: column;
     gap: 2px;
     min-width: 0;
+}
+
+.info a {
+    color: #fff;
+    font-weight: bold;
+    text-decoration: none;
 }
 
 .info span {
@@ -162,6 +183,7 @@ form {
     flex-direction: column;
     gap: 12px;
     max-width: 600px;
+    margin-bottom: 32px;
 }
 
 form input,
@@ -191,18 +213,7 @@ textarea {
 }
 
 form button {
-    padding: 12px 20px;
     font-size: 16px;
-    font-weight: bold;
-    color: #141414;
-    background: #f5c518;
-    border: 0;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-form button:hover {
-    background: #ffd633;
 }
 
 .botoes {
@@ -213,4 +224,138 @@ form button:hover {
 
 .botoes a {
     color: #bbb;
+}
+
+.voltar {
+    display: inline-block;
+    margin-bottom: 16px;
+    color: #bbb;
+    text-decoration: none;
+}
+
+.voltar:hover {
+    color: #f5c518;
+}
+
+h1 {
+    margin: 16px 0 4px;
+    font-size: 28px;
+}
+
+#detalhes {
+    margin: 0 0 24px;
+    color: #bbb;
+}
+
+pre {
+    margin: 0;
+    padding: 16px;
+    font-size: 15px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    background: #1f1f1f;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+}
+
+#letra {
+    font-family: Arial, sans-serif;
+}
+
+#cifra {
+    font-family: monospace;
+    white-space: pre;
+    overflow-x: auto;
+}
+
+.apagar {
+    padding: 12px 16px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #ff6b6b;
+    background: none;
+    border: 1px solid #ff6b6b;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.controles-musica {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pasta-select {
+    max-width: 145px;
+    padding: 7px;
+    color: #fff;
+    background: #1f1f1f;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+}
+
+.botoes-pasta {
+    display: flex;
+    gap: 8px;
+}
+
+.botao-secundario {
+    color: #fff !important;
+    background: #1f1f1f !important;
+    border: 1px solid #3a3a3a !important;
+}
+
+.botao-secundario:hover {
+    border-color: #f5c518 !important;
+}
+
+@media (max-width: 600px) {
+    header,
+    nav,
+    main {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .acoes {
+        flex-direction: column;
+    }
+
+    .acoes .botao {
+        text-align: center;
+    }
+
+    nav {
+        gap: 20px;
+    }
+
+    .musica {
+        flex-wrap: wrap;
+    }
+
+    .controles-musica {
+        flex-wrap: wrap;
+    }
+
+    .pasta-select {
+        max-width: 130px;
+        font-size: 13px;
+    }
+
+    form {
+        max-width: 100%;
+    }
+
+    .botoes-pasta {
+        flex-direction: column;
+    }
+
+    .botoes-pasta button {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+
+    h2 {
+        font-size: 19px;
+    }
 }

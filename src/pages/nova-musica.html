@@ -18,7 +18,7 @@
     </header>
 
     <main>
-        <h2>Adicionar música</h2>
+        <h2 id="titulo">Adicionar música</h2>
 
         <form id="frmMusica">
             <input type="text" name="nome" placeholder="nome da música" required>
@@ -29,7 +29,7 @@
 
             <div class="botoes">
                 <button type="submit">salvar</button>
-                <a href="/home">cancelar</a>
+                <a href="/home" id="cancelar">cancelar</a>
             </div>
         </form>
     </main>
@@ -53,11 +53,34 @@
 
     <script>
         const frmMusica = document.querySelector('#frmMusica')
+        const id = new URLSearchParams(window.location.search).get('id')
+
+        async function carregarMusica() {
+            const response = await fetch('/music/' + id)
+            const musica = response.ok ? await response.json() : null
+
+            if (!musica) {
+                alert('Música não encontrada')
+                window.location.href = '/home'
+                return
+            }
+
+            document.querySelector('#titulo').textContent = 'Editar música'
+            document.querySelector('#cancelar').href = '/musica/' + id
+            frmMusica.nome.value = musica.nome
+            frmMusica.artista.value = musica.artista || ''
+            frmMusica.tom.value = musica.tom || ''
+            frmMusica.letra.value = musica.letra || ''
+            frmMusica.acordes.value = musica.acordes || ''
+        }
+
+        if (id)
+            carregarMusica()
 
         frmMusica.addEventListener('submit', async (ev) => {
             ev.preventDefault()
-            const response = await fetch("/music", {
-                method: "POST",
+            const response = await fetch(id ? '/music/' + id : '/music', {
+                method: id ? "PUT" : "POST",
                 headers: { "Content-type": "application/json" },
                 body: JSON.stringify({
                     "nome": frmMusica.nome.value,
@@ -69,12 +92,12 @@
             })
 
             if (response.ok) {
-                window.location.href = "/home"
+                window.location.href = id ? '/musica/' + id : '/home'
                 return
             }
 
             const data = await response.json()
-            alert(data.message || "Erro ao cadastrar música")
+            alert(data.message || "Erro ao salvar música")
         })
     </script>
 </body>
