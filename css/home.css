@@ -1,0 +1,361 @@
+
+* {
+    box-sizing: border-box;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+body {
+    margin: 0;
+    background: #141414;
+    color: #fff;
+    font-family: Arial, sans-serif;
+}
+
+header,
+nav,
+main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    padding-bottom: 12px;
+}
+
+.logo {
+    font-size: 28px;
+    font-weight: bold;
+    color: #fff;
+    text-decoration: none;
+}
+
+.logo span {
+    color: #f5c518;
+}
+
+.username {
+    font-size: 14px;
+    color: #bbb;
+}
+
+nav {
+    display: flex;
+    gap: 24px;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+nav a {
+    padding: 8px 0;
+    margin-bottom: -1px;
+    color: #bbb;
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+}
+
+nav a.ativo {
+    color: #fff;
+    border-bottom-color: #f5c518;
+}
+
+main {
+    padding-top: 24px;
+    padding-bottom: 48px;
+}
+
+section {
+    margin-bottom: 40px;
+}
+
+h2 {
+    margin: 0 0 20px;
+    font-size: 20px;
+}
+
+.acoes {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+#busca {
+    flex: 1;
+    min-width: 0;
+    padding: 12px;
+    font-size: 16px;
+    color: #fff;
+    background: #1f1f1f;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+}
+
+#busca:focus {
+    outline: none;
+    border-color: #f5c518;
+}
+
+.botao,
+form button,
+.botoes-pasta button,
+#btnRenomear {
+    padding: 12px 16px;
+    font-weight: bold;
+    color: #141414;
+    background: #f5c518;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.botao:hover,
+form button:hover,
+.botoes-pasta button:hover,
+#btnRenomear:hover {
+    background: #ffd633;
+}
+
+#listaMusicas,
+#listaPastas,
+#listaPastaMusicas {
+    border-top: 1px solid #3a3a3a;
+}
+
+.musica {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    color: #fff;
+    border-bottom: 1px solid #3a3a3a;
+    text-decoration: none;
+}
+
+.musica:hover strong,
+.musica:hover .info a {
+    color: #f5c518;
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.info a {
+    color: #fff;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.info span {
+    font-size: 14px;
+    color: #bbb;
+}
+
+.tom {
+    padding: 2px 8px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #141414;
+    background: #f5c518;
+    border-radius: 4px;
+}
+
+.vazio {
+    margin: 0;
+    font-size: 15px;
+    color: #bbb;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 600px;
+    margin-bottom: 32px;
+}
+
+form input,
+form textarea {
+    padding: 12px;
+    font-family: inherit;
+    font-size: 16px;
+    color: #fff;
+    background: #1f1f1f;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+}
+
+form input:focus,
+form textarea:focus {
+    outline: none;
+    border-color: #f5c518;
+}
+
+textarea {
+    min-height: 140px;
+    resize: vertical;
+}
+
+#cifra {
+    font-family: monospace;
+}
+
+form button {
+    font-size: 16px;
+}
+
+.botoes {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.botoes a {
+    color: #bbb;
+}
+
+.voltar {
+    display: inline-block;
+    margin-bottom: 16px;
+    color: #bbb;
+    text-decoration: none;
+}
+
+.voltar:hover {
+    color: #f5c518;
+}
+
+h1 {
+    margin: 16px 0 4px;
+    font-size: 28px;
+}
+
+#detalhes {
+    margin: 0 0 24px;
+    color: #bbb;
+}
+
+pre {
+    margin: 0;
+    padding: 16px;
+    font-size: 15px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    background: #1f1f1f;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+}
+
+#letra {
+    font-family: Arial, sans-serif;
+}
+
+#cifra {
+    font-family: monospace;
+    white-space: pre;
+    overflow-x: auto;
+}
+
+.apagar {
+    padding: 12px 16px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #ff6b6b;
+    background: none;
+    border: 1px solid #ff6b6b;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.controles-musica {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pasta-select {
+    max-width: 145px;
+    padding: 7px;
+    color: #fff;
+    background: #1f1f1f;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+}
+
+.botoes-pasta {
+    display: flex;
+    gap: 8px;
+}
+
+.botao-secundario {
+    color: #fff !important;
+    background: #1f1f1f !important;
+    border: 1px solid #3a3a3a !important;
+}
+
+.botao-secundario:hover {
+    border-color: #f5c518 !important;
+}
+
+@media (max-width: 600px) {
+    header,
+    nav,
+    main {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .acoes {
+        flex-direction: column;
+    }
+
+    .acoes .botao {
+        text-align: center;
+    }
+
+    nav {
+        gap: 20px;
+    }
+
+    .musica {
+        flex-wrap: wrap;
+    }
+
+    .controles-musica {
+        flex-wrap: wrap;
+    }
+
+    .pasta-select {
+        max-width: 130px;
+        font-size: 13px;
+    }
+
+    form {
+        max-width: 100%;
+    }
+
+    .botoes-pasta {
+        flex-direction: column;
+    }
+
+    .botoes-pasta button {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+
+    h2 {
+        font-size: 19px;
+    }
+}

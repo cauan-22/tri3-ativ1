@@ -1,0 +1,276 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CifraBox - Pastas</title>
+    <link rel="stylesheet" href="../css/home.css">
+</head>
+<body>
+    <header>
+        <a class="logo" href="/home">Cifra<span>Box</span></a>
+        <div class="profile">
+            <div class="username"></div>
+        </div>
+    </header>
+
+    <nav>
+        <a href="/home">Início</a>
+        <a href="/musicas">Músicas</a>
+        <a href="/pastas" class="ativo">Pastas</a>
+    </nav>
+
+    <main>
+        <section id="telaPastas">
+            <h2>Minhas pastas</h2>
+
+            <form id="frmPasta">
+                <input type="text" name="nome" placeholder="Nome da nova pasta" required maxlength="60">
+                <button type="submit">Criar pasta</button>
+            </form>
+
+            <div id="listaPastas"></div>
+
+            <p class="vazio" id="semPastas">
+                Você ainda não criou nenhuma pasta.
+            </p>
+        </section>
+
+        <section id="conteudoPasta" hidden>
+            <a href="#" class="voltar" id="voltar">← Voltar para pastas</a>
+
+            <h2 id="tituloPasta"></h2>
+
+            <div class="acoes">
+                <button type="button" id="btnRenomear">Renomear</button>
+                <button type="button" class="apagar" id="btnExcluir">Excluir pasta</button>
+            </div>
+
+            <div id="listaPastaMusicas"></div>
+
+            <p class="vazio" id="semMusicas">
+                Esta pasta ainda não possui músicas.
+            </p>
+        </section>
+    </main>
+
+    <script>
+        const frmPasta = document.querySelector('#frmPasta')
+        const listaPastas = document.querySelector('#listaPastas')
+        const semPastas = document.querySelector('#semPastas')
+        const telaPastas = document.querySelector('#telaPastas')
+        const conteudoPasta = document.querySelector('#conteudoPasta')
+        const listaPastaMusicas = document.querySelector('#listaPastaMusicas')
+        const semMusicas = document.querySelector('#semMusicas')
+
+        let pastas = []
+        let pastaAtual = null
+
+        async function init() {
+            const response = await fetch('/login/user')
+
+            if (!response.ok) {
+                window.location.href = '/'
+                return false
+            }
+
+            const data = await response.json()
+            document.querySelector('.username').textContent = data.username
+
+            return true
+        }
+
+        async function carregarPastas() {
+            const response = await fetch('/folder')
+
+            if (!response.ok)
+                return
+
+            pastas = await response.json()
+            mostrarPastas()
+        }
+
+        function mostrarPastas() {
+            listaPastas.replaceChildren()
+            semPastas.hidden = pastas.length > 0
+
+            pastas.forEach(pasta => {
+                const item = document.createElement('div')
+                item.className = 'musica'
+
+                const info = document.createElement('div')
+                info.className = 'info'
+
+                const nome = document.createElement('strong')
+                nome.textContent = pasta.nome
+
+                const quantidade = document.createElement('span')
+                quantidade.textContent = 'Abrir para visualizar músicas'
+
+                info.append(nome, quantidade)
+
+                const botoes = document.createElement('div')
+                botoes.className = 'botoes-pasta'
+
+                const abrir = document.createElement('button')
+                abrir.type = 'button'
+                abrir.textContent = 'Abrir'
+                abrir.addEventListener('click', () => abrirPasta(pasta))
+
+                const renomear = document.createElement('button')
+                renomear.type = 'button'
+                renomear.className = 'botao-secundario'
+                renomear.textContent = 'Renomear'
+                renomear.addEventListener('click', () => renomearPasta(pasta))
+
+                botoes.append(abrir, renomear)
+                item.append(info, botoes)
+                listaPastas.append(item)
+            })
+        }
+
+        async function abrirPasta(pasta) {
+            const response = await fetch('/folder/' + pasta.id + '/musics')
+
+            if (!response.ok) {
+                alert('Erro ao abrir pasta.')
+                return
+            }
+
+            const musicas = await response.json()
+
+            pastaAtual = pasta
+            telaPastas.hidden = true
+            conteudoPasta.hidden = false
+
+            document.querySelector('#tituloPasta').textContent = pasta.nome
+            listaPastaMusicas.replaceChildren()
+            semMusicas.hidden = musicas.length > 0
+
+            musicas.forEach(musica => {
+                const item = document.createElement('a')
+                item.className = 'musica'
+                item.href = '/musica/' + musica.id
+
+                const info = document.createElement('div')
+                info.className = 'info'
+
+                const nome = document.createElement('strong')
+                nome.textContent = musica.nome
+
+                const artista = document.createElement('span')
+                artista.textContent = musica.artista || 'Artista não informado'
+
+                info.append(nome, artista)
+                item.append(info)
+
+                if (musica.tom) {
+                    const tom = document.createElement('small')
+                    tom.className = 'tom'
+                    tom.textContent = musica.tom
+                    item.append(tom)
+                }
+
+                listaPastaMusicas.append(item)
+            })
+        }
+
+        async function renomearPasta(pasta) {
+            const novoNome = prompt('Novo nome da pasta:', pasta.nome)
+
+            if (!novoNome || !novoNome.trim())
+                return
+
+            const response = await fetch('/folder/' + pasta.id, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nome: novoNome.trim()
+                })
+            })
+
+            if (!response.ok) {
+                alert('Erro ao renomear pasta.')
+                return
+            }
+
+            await carregarPastas()
+        }
+
+        async function excluirPasta() {
+            if (!pastaAtual)
+                return
+
+            if (!confirm('Excluir esta pasta? As músicas continuarão salvas.'))
+                return
+
+            const response = await fetch('/folder/' + pastaAtual.id, {
+                method: 'DELETE'
+            })
+
+            if (!response.ok) {
+                alert('Erro ao excluir pasta.')
+                return
+            }
+
+            pastaAtual = null
+            conteudoPasta.hidden = true
+            telaPastas.hidden = false
+
+            await carregarPastas()
+        }
+
+        frmPasta.addEventListener('submit', async ev => {
+            ev.preventDefault()
+
+            const nome = frmPasta.nome.value.trim()
+
+            if (!nome)
+                return
+
+            const response = await fetch('/folder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ nome })
+            })
+
+            if (!response.ok) {
+                alert('Erro ao criar pasta.')
+                return
+            }
+
+            frmPasta.reset()
+            await carregarPastas()
+        })
+
+        document.querySelector('#voltar').addEventListener('click', ev => {
+            ev.preventDefault()
+
+            conteudoPasta.hidden = true
+            telaPastas.hidden = false
+            pastaAtual = null
+        })
+
+        document.querySelector('#btnRenomear').addEventListener('click', () => {
+            if (pastaAtual)
+                renomearPasta(pastaAtual)
+        })
+
+        document.querySelector('#btnExcluir').addEventListener('click', excluirPasta)
+
+        async function iniciar() {
+            if (!await init())
+                return
+
+            await carregarPastas()
+        }
+
+        iniciar()
+    </script>
+</body>
+</html>
