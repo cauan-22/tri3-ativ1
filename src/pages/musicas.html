@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -12,6 +11,7 @@
         <a class="logo" href="/home">Cifra<span>Box</span></a>
         <div class="profile">
             <div class="username"></div>
+            <button type="button" class="sair" id="btnSair">sair</button>
         </div>
     </header>
 
@@ -42,7 +42,6 @@
         const busca = document.querySelector('#busca')
 
         let musicas = []
-        let pastas = []
 
         async function init() {
             const response = await fetch('/login/user')
@@ -56,13 +55,6 @@
             document.querySelector('.username').textContent = data.username
 
             return true
-        }
-
-        async function carregarPastas() {
-            const response = await fetch('/folder')
-
-            if (response.ok)
-                pastas = await response.json()
         }
 
         async function carregarMusicas() {
@@ -100,71 +92,29 @@
             semMusicas.hidden = true
 
             lista.forEach(musica => {
-                const item = document.createElement('div')
+                const item = document.createElement('a')
                 item.className = 'musica'
+                item.href = '/musica/' + musica.id
 
                 const info = document.createElement('div')
                 info.className = 'info'
 
-                const nome = document.createElement('a')
-                nome.href = '/musica/' + musica.id
+                const nome = document.createElement('strong')
                 nome.textContent = musica.nome
 
                 const artista = document.createElement('span')
                 artista.textContent = musica.artista || 'Artista não informado'
 
                 info.append(nome, artista)
-
-                const controles = document.createElement('div')
-                controles.className = 'controles-musica'
+                item.append(info)
 
                 if (musica.tom) {
                     const tom = document.createElement('small')
                     tom.className = 'tom'
                     tom.textContent = musica.tom
-                    controles.append(tom)
+                    item.append(tom)
                 }
 
-                const select = document.createElement('select')
-                select.className = 'pasta-select'
-                select.setAttribute('aria-label', 'Pasta da música')
-
-                const opcao = document.createElement('option')
-                opcao.value = ''
-                opcao.textContent = 'Sem pasta'
-                select.append(opcao)
-
-                pastas.forEach(pasta => {
-                    const option = document.createElement('option')
-                    option.value = pasta.id
-                    option.textContent = pasta.nome
-                    select.append(option)
-                })
-
-                select.value = musica.folder_id || ''
-
-                select.addEventListener('change', async () => {
-                    const response = await fetch('/music/' + musica.id + '/folder', {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            folderId: select.value ? Number(select.value) : null
-                        })
-                    })
-
-                    if (!response.ok) {
-                        alert('Erro ao organizar música.')
-                        select.value = musica.folder_id || ''
-                        return
-                    }
-
-                    musica.folder_id = select.value ? Number(select.value) : null
-                })
-
-                controles.append(select)
-                item.append(info, controles)
                 listaMusicas.append(item)
             })
         }
@@ -175,11 +125,15 @@
             if (!await init())
                 return
 
-            await carregarPastas()
             await carregarMusicas()
         }
 
         iniciar()
+
+        document.querySelector('#btnSair').addEventListener('click', async () => {
+            await fetch('/logout', { method: 'POST' })
+            window.location.href = '/'
+        })
     </script>
 </body>
 </html>

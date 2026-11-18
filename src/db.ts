@@ -1,7 +1,8 @@
-
 import { Database } from "bun:sqlite"
 
 const db = new Database("database.sqlite")
+
+const tabelaNova = !db.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'music_folders'").get()
 
 db.exec(`
     PRAGMA foreign_keys = ON;
@@ -30,12 +31,23 @@ db.exec(`
         user_id INTEGER NOT NULL REFERENCES users(id),
         nome TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS music_folders (
+        music_id INTEGER NOT NULL REFERENCES music(id) ON DELETE CASCADE,
+        folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE,
+        PRIMARY KEY (music_id, folder_id)
+    );
 `)
 
 const colunas = db.query("PRAGMA table_info(music)").all() as { name: string }[]
 
-if (!colunas.some(coluna => coluna.name === "folder_id")) {
-    db.exec("ALTER TABLE music ADD COLUMN folder_id INTEGER REFERENCES folders(id)")
+if (tabelaNova && colunas.some(coluna => coluna.name === "folder_id")) {
+    db.exec(`
+        INSERT INTO music_folders(music_id, folder_id)
+        SELECT id, folder_id FROM music WHERE folder_id IS NOT NULL;
+
+        UPDATE music SET folder_id = NULL;
+    `)
 }
 
 export { db }

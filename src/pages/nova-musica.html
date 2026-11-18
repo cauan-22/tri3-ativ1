@@ -14,6 +14,7 @@
             <div class="username">
 
             </div>
+            <button type="button" class="sair" id="btnSair">sair</button>
         </div>
     </header>
 
@@ -98,6 +99,11 @@
 
             const data = await response.json()
             alert(data.message || "Erro ao salvar música")
+        })
+
+        document.querySelector('#btnSair').addEventListener('click', async () => {
+            await fetch('/logout', { method: 'POST' })
+            window.location.href = '/'
         })
     </script>
 </body>

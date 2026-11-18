@@ -14,6 +14,7 @@
             <div class="username">
 
             </div>
+            <button type="button" class="sair" id="btnSair">sair</button>
         </div>
     </header>
 
@@ -28,6 +29,12 @@
             <button type="button" class="apagar" id="btnApagar">apagar</button>
         </div>
 
+        <section id="secaoPasta">
+            <h2>Pastas</h2>
+            <div id="opcoesPastas"></div>
+            <p class="vazio" id="semPastas">Você ainda não criou nenhuma pasta. Crie uma na aba Pastas.</p>
+        </section>
+
         <section>
             <h2>Letra</h2>
             <pre id="letra"></pre>
@@ -35,6 +42,14 @@
 
         <section>
             <h2>Cifra</h2>
+
+            <div class="tom-controles" id="controlesTom">
+                <button type="button" class="botao-tom" id="btnTomMenos">−</button>
+                <span id="tomAtual"></span>
+                <button type="button" class="botao-tom" id="btnTomMais">+</button>
+                <button type="button" class="botao-tom" id="btnTomOriginal">original</button>
+            </div>
+
             <pre id="cifra"></pre>
         </section>
     </main>
@@ -59,8 +74,107 @@
     <script>
         const id = window.location.pathname.split('/').pop()
         const acoes = document.querySelector('#acoes')
+        const secaoPasta = document.querySelector('#secaoPasta')
+        const opcoesPastas = document.querySelector('#opcoesPastas')
+        const semPastas = document.querySelector('#semPastas')
         const linkEditar = document.querySelector('#linkEditar')
         const btnApagar = document.querySelector('#btnApagar')
+        const cifra = document.querySelector('#cifra')
+        const controlesTom = document.querySelector('#controlesTom')
+        const tomAtual = document.querySelector('#tomAtual')
+        const btnTomMenos = document.querySelector('#btnTomMenos')
+        const btnTomMais = document.querySelector('#btnTomMais')
+        const btnTomOriginal = document.querySelector('#btnTomOriginal')
+
+        let musicaAtual = null
+        let passos = 0
+
+        const sustenidos = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+        const bemois = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+        const acorde = /^([CDFGA]#|[DEGAB]b|[A-G])((?:m|maj|min|M|dim|aug|sus|add|[0-9]|[#b+\-()º°ø]|\/[0-9])*)(?:\/([CDFGA]#|[DEGAB]b|[A-G]))?$/
+        const neutro = /^(\[[^\]]*\]|[|\-–]+|\(?x?\d+x?\)?|N\.?C\.?)$/i
+
+        function transporNota(nota, passos) {
+            const escala = nota.includes('b') ? bemois : sustenidos
+            const posicao = sustenidos.includes(nota) ? sustenidos.indexOf(nota) : bemois.indexOf(nota)
+            return escala[((posicao + passos) % 12 + 12) % 12]
+        }
+
+        function transporAcorde(token, passos) {
+            const partes = token.match(acorde)
+            const baixo = partes[3] ? '/' + transporNota(partes[3], passos) : ''
+            return transporNota(partes[1], passos) + partes[2] + baixo
+        }
+
+        function transporLinha(linha, passos) {
+            return linha.replace(/(\S+)( *)/g, (inteiro, token, espacos) => {
+                if (!acorde.test(token))
+                    return inteiro
+
+                const novo = transporAcorde(token, passos)
+                const sobra = espacos.length ? Math.max(1, espacos.length - (novo.length - token.length)) : 0
+                return novo + ' '.repeat(sobra)
+            })
+        }
+
+        function ehLinhaDeAcordes(linha) {
+            const tokens = linha.replace(/\[[^\]]*\]/g, ' ').trim().split(/\s+/).filter(t => t && !neutro.test(t))
+            const acordes = tokens.filter(t => acorde.test(t))
+            return acordes.length > tokens.length / 2
+        }
+
+        function mostrarCifra() {
+            if (!musicaAtual.acordes) {
+                cifra.textContent = 'Sem cifra cadastrada.'
+                controlesTom.hidden = true
+                return
+            }
+
+            cifra.textContent = musicaAtual.acordes
+                .split('\n')
+                .map(linha => ehLinhaDeAcordes(linha) ? transporLinha(linha, passos) : linha)
+                .join('\n')
+
+            const partes = []
+
+            if (musicaAtual.tom && acorde.test(musicaAtual.tom))
+                partes.push('Tom: ' + transporAcorde(musicaAtual.tom, passos))
+
+            if (passos !== 0)
+                partes.push((passos > 0 ? '+' : '') + passos)
+
+            tomAtual.textContent = partes.join(' · ') || 'Tom original'
+        }
+
+        async function carregarPastas() {
+            const response = await fetch('/folder')
+            const pastas = response.ok ? await response.json() : []
+
+            semPastas.hidden = pastas.length > 0
+
+            pastas.forEach(pasta => {
+                const rotulo = document.createElement('label')
+                rotulo.className = 'opcao-pasta'
+
+                const caixa = document.createElement('input')
+                caixa.type = 'checkbox'
+                caixa.checked = musicaAtual.pastas.includes(pasta.id)
+
+                caixa.addEventListener('change', async () => {
+                    const response = await fetch('/music/' + id + '/folder/' + pasta.id, {
+                        method: caixa.checked ? 'PUT' : 'DELETE'
+                    })
+
+                    if (!response.ok) {
+                        alert('Erro ao mudar as pastas da música')
+                        caixa.checked = !caixa.checked
+                    }
+                })
+
+                rotulo.append(caixa, pasta.nome)
+                opcoesPastas.append(rotulo)
+            })
+        }
 
         async function carregarMusica() {
             const response = await fetch('/music/' + id)
@@ -69,16 +183,36 @@
             if (!musica) {
                 document.querySelector('#nome').textContent = 'Música não encontrada'
                 acoes.remove()
+                secaoPasta.remove()
                 return
             }
+
+            musicaAtual = musica
 
             document.querySelector('#nome').textContent = musica.nome
             document.querySelector('#detalhes').textContent = [musica.artista, musica.tom ? 'Tom: ' + musica.tom : ''].filter(Boolean).join(' · ')
             document.querySelector('#letra').textContent = musica.letra || 'Sem letra cadastrada.'
-            document.querySelector('#cifra').textContent = musica.acordes || 'Sem cifra cadastrada.'
+            mostrarCifra()
             linkEditar.href = '/nova-musica?id=' + id
+
+            await carregarPastas()
         }
         carregarMusica()
+
+        btnTomMais.addEventListener('click', () => {
+            passos = (passos + 1) % 12
+            mostrarCifra()
+        })
+
+        btnTomMenos.addEventListener('click', () => {
+            passos = (passos - 1) % 12
+            mostrarCifra()
+        })
+
+        btnTomOriginal.addEventListener('click', () => {
+            passos = 0
+            mostrarCifra()
+        })
 
         btnApagar.addEventListener('click', async () => {
             if (!confirm('Apagar esta música?'))
@@ -92,6 +226,11 @@
             }
 
             alert('Erro ao apagar música')
+        })
+
+        document.querySelector('#btnSair').addEventListener('click', async () => {
+            await fetch('/logout', { method: 'POST' })
+            window.location.href = '/'
         })
     </script>
 </body>

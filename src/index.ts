@@ -1,4 +1,3 @@
-
 import frontend from "./pages/index.html"
 import home from "./pages/home.html"
 import novaMusica from "./pages/nova-musica.html"
@@ -60,12 +59,20 @@ const srv = Bun.serve({
             return Response.json(loggedUsers[ses])
         },
 
-        "/user": {
-            GET: () => {
-                const query = db.query("SELECT id, username, email FROM users")
-                return Response.json(query.all())
-            },
+        "/logout": {
+            POST: (req) => {
+                const ses = req.cookies.get("ses")
 
+                if (ses)
+                    delete loggedUsers[ses]
+
+                req.cookies.delete("ses")
+
+                return Response.json({ message: "Sessão encerrada" })
+            }
+        },
+
+        "/user": {
             POST: async (req) => {
                 let body
 
@@ -109,10 +116,8 @@ const srv = Bun.serve({
                 if (!user) return naoAutorizado()
 
                 const query = db.query(`
-                    SELECT music.*, folders.nome AS pasta_nome
-                    FROM music
-                    LEFT JOIN folders ON folders.id = music.folder_id
-                    WHERE music.user_id = :user_id
+                    SELECT * FROM music
+                    WHERE user_id = :user_id
                 `)
 
                 return Response.json(query.all({ ":user_id": user.id }))
@@ -157,10 +162,15 @@ const srv = Bun.serve({
                     WHERE id = :id AND user_id = :user_id
                 `)
 
-                const data = query.get({
+                const data: any = query.get({
                     ":id": req.params.id,
                     ":user_id": user.id
                 })
+
+                if (data) {
+                    const pastas = db.query("SELECT folder_id FROM music_folders WHERE music_id = :id").all({ ":id": data.id }) as { folder_id: number }[]
+                    data.pastas = pastas.map(pasta => pasta.folder_id)
+                }
 
                 return Response.json(data)
             },
@@ -214,35 +224,54 @@ const srv = Bun.serve({
             }
         },
 
-        "/music/:id/folder": {
-            PATCH: async (req) => {
+        "/music/:id/folder/:folderId": {
+            PUT: (req) => {
                 const user = usuarioLogado(req)
                 if (!user) return naoAutorizado()
 
-                const body = await req.body?.json()
+                const musica: any = db.query(`
+                    SELECT id FROM music
+                    WHERE id = :id AND user_id = :user_id
+                `).get({
+                    ":id": req.params.id,
+                    ":user_id": user.id
+                })
 
-                if (body.folderId !== null && body.folderId !== undefined) {
-                    const pasta = db.query(`
-                        SELECT id FROM folders
-                        WHERE id = :id AND user_id = :user_id
-                    `).get({
-                        ":id": body.folderId,
-                        ":user_id": user.id
-                    })
+                const pasta: any = db.query(`
+                    SELECT id FROM folders
+                    WHERE id = :id AND user_id = :user_id
+                `).get({
+                    ":id": req.params.folderId,
+                    ":user_id": user.id
+                })
 
-                    if (!pasta)
-                        return Response.json({ message: "Pasta não encontrada" }, { status: 404 })
-                }
+                if (!musica || !pasta)
+                    return Response.json({ message: "Música ou pasta não encontrada" }, { status: 404 })
 
                 const query = db.query(`
-                    UPDATE music
-                    SET folder_id = :folder_id
-                    WHERE id = :id AND user_id = :user_id
+                    INSERT OR IGNORE INTO music_folders(music_id, folder_id)
+                    VALUES(:music_id, :folder_id)
                 `)
 
                 return Response.json(query.run({
-                    ":folder_id": body.folderId ?? null,
-                    ":id": req.params.id,
+                    ":music_id": musica.id,
+                    ":folder_id": pasta.id
+                }))
+            },
+
+            DELETE: (req) => {
+                const user = usuarioLogado(req)
+                if (!user) return naoAutorizado()
+
+                const query = db.query(`
+                    DELETE FROM music_folders
+                    WHERE music_id = :music_id AND folder_id = :folder_id
+                    AND music_id IN (SELECT id FROM music WHERE user_id = :user_id)
+                `)
+
+                return Response.json(query.run({
+                    ":music_id": req.params.id,
+                    ":folder_id": req.params.folderId,
                     ":user_id": user.id
                 }))
             }
@@ -254,9 +283,9 @@ const srv = Bun.serve({
                 if (!user) return naoAutorizado()
 
                 const query = db.query(`
-                    SELECT folders.*, COUNT(music.id) AS total_musicas
+                    SELECT folders.*, COUNT(music_folders.music_id) AS total_musicas
                     FROM folders
-                    LEFT JOIN music ON music.folder_id = folders.id
+                    LEFT JOIN music_folders ON music_folders.folder_id = folders.id
                     WHERE folders.user_id = :user_id
                     GROUP BY folders.id
                     ORDER BY folders.nome
@@ -314,14 +343,6 @@ const srv = Bun.serve({
                 const user = usuarioLogado(req)
                 if (!user) return naoAutorizado()
 
-                db.query(`
-                    UPDATE music SET folder_id = NULL
-                    WHERE folder_id = :id AND user_id = :user_id
-                `).run({
-                    ":id": req.params.id,
-                    ":user_id": user.id
-                })
-
                 const query = db.query(`
                     DELETE FROM folders
                     WHERE id = :id AND user_id = :user_id
@@ -351,9 +372,10 @@ const srv = Bun.serve({
                     return Response.json({ message: "Pasta não encontrada" }, { status: 404 })
 
                 const query = db.query(`
-                    SELECT * FROM music
-                    WHERE folder_id = :folder_id AND user_id = :user_id
-                    ORDER BY nome
+                    SELECT music.* FROM music
+                    JOIN music_folders ON music_folders.music_id = music.id
+                    WHERE music_folders.folder_id = :folder_id AND music.user_id = :user_id
+                    ORDER BY music.nome
                 `)
 
                 return Response.json(query.all({
